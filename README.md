@@ -18,7 +18,10 @@ Built for security researchers, penetration testers, CTF players, and investigat
 
 ## ⚡ Key Capabilities
 
+- **Interactive Target Profiler (`hunt`)**: Step-by-step wizard prompting for username, full name, email, and location to correlate findings into a unified intelligence dossier.
 - **Concurrent Username Hunting**: Asynchronously probes 35+ platforms (GitHub, Reddit, Twitter/X, Keybase, Steam, Telegram, Spotify, HackerNews, SoundCloud, Twitch, etc.) in under 2 seconds.
+- **Email Intelligence & Avatar Footprinting**: Validates format, checks MX mail servers via DNS-over-HTTPS (DoH), searches public Gravatar accounts, and correlates GitHub email owners.
+- **Tactical OSINT Dork Generation**: Automatically formats tailored Google and DuckDuckGo search queries for social profiles, CV/resumes, pastebin leaks, and exposed git credentials.
 - **Certificate Transparency Subdomain Discovery**: Passively discovers subdomains and shadow infrastructure via `crt.sh` logs without sending invasive packets to target systems.
 - **DNS & Anti-Spoofing Mail Security Audit**: Queries DNS records over HTTPS (Cloudflare 1.1.1.1 DoH) and audits SPF (`v=spf1`) and DMARC (`_dmarc`) configuration to determine whether a domain is vulnerable to email spoofing.
 - **HTTP Security Headers Audit**: Assesses web server hardening (HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) and calculates a letter grade (A+ through F) with remediation advice.
@@ -44,7 +47,56 @@ pip install -e ".[dev]"
 
 ## 💻 Usage
 
-### 1. Hunt a Username Across Online Platforms
+### 1. Interactive Multi-Vector Target Investigation (`hunt`)
+
+The smartest way to profile a target. Prompts you step-by-step for known attributes:
+
+```bash
+dastyclaw hunt
+```
+
+Or pass flags directly:
+
+```bash
+dastyclaw hunt -u pajadasty -n "Pavel" -e "pajadasty@gmail.com" -l "Prague"
+```
+
+Output:
+
+```text
+[*] Tactical Target Profiler (Interactive OSINT Wizard)
+Zadejte známé údaje o cíli (nechte prázdné pro přeskočení):
+
+[?] Přezdívka / Nickname (např. pajadasty): pajadasty
+[?] Jméno a příjmení osoby (např. Pavel Novák): Pavel
+[?] Emailová adresa (např. target@example.com): pajadasty@gmail.com
+[?] Město / Lokalita (např. Praha / Czechia): Praha
+
+[1/3] Skenování digitální stopy pro přezdívku: @pajadasty
+  [+] PROFIL GitHub         https://github.com/pajadasty (246ms)
+  [+] PROFIL Spotify        https://open.spotify.com/user/pajadasty (206ms)
+  [+] PROFIL Twitch         https://www.twitch.tv/pajadasty (744ms)
+  ...
+  Nalezeno: 10 aktivních profilů.
+
+[2/3] Prověřování emailové adresy: pajadasty@gmail.com
+  [+] Doména: gmail.com (MX: VALIDNÍ (PŘIJÍMÁ POŠTU))
+
+[3/3] Generování taktických vyhledávacích dotazů (OSINT Dorks)...
+  • Social & Professional: Locate social media and LinkedIn profiles matching real name
+    Google: https://www.google.com/search?q=site%3Alinkedin.com%2Fin...
+  • Documents & CV: Search for published resumes, resumes, presentations or documents
+  • Pastes & Dumps: Search for mentions in public paste and text storage sites
+  • Code & Git Repos: Search for commits, config files, and issues containing the email
+
+[*] Kompletní vyšetřovací spis vygenerován:
+  MD Report:   reports\pajadasty_investigation_dossier.md
+  JSON Data:   reports\pajadasty_investigation_dossier.json
+```
+
+---
+
+### 2. Standalone Username Hunter
 
 Scan for digital footprints and active accounts across social networks, developer hubs, and streaming platforms:
 
@@ -52,29 +104,9 @@ Scan for digital footprints and active accounts across social networks, develope
 dastyclaw user pajadasty
 ```
 
-Output:
-
-```text
-[*] Initiating Username Hunter for target: @pajadasty
-  [+] FOUND  GitHub         https://github.com/pajadasty (489ms)
-  [+] FOUND  GitLab         https://gitlab.com/pajadasty (478ms)
-  [+] FOUND  PyPI           https://pypi.org/user/pajadasty/ (282ms)
-  [+] FOUND  Spotify        https://open.spotify.com/user/pajadasty (256ms)
-  [+] FOUND  SoundCloud     https://soundcloud.com/pajadasty (305ms)
-  [+] FOUND  Twitch         https://www.twitch.tv/pajadasty (943ms)
-  [+] FOUND  Hashnode       https://hashnode.com/@pajadasty (204ms)
-  [+] FOUND  Medium         https://medium.com/@pajadasty (499ms)
-  [+] FOUND  Pinterest      https://www.pinterest.com/pajadasty/ (670ms)
-  [+] FOUND  Replit         https://replit.com/@pajadasty (709ms)
-
-[*] Hunter complete: 10 active profiles found across 36 platforms.
-```
-
-Reports are automatically saved to `./reports/<username>_user_dossier.md` and `.json`.
-
 ---
 
-### 2. Domain & Subdomain Intelligence
+### 3. Domain & Subdomain Intelligence
 
 Enumerate subdomains via Certificate Transparency, resolve DNS, and evaluate mail spoofability:
 
@@ -121,21 +153,23 @@ Output:
 ## 🛠 CLI Options
 
 ```text
-usage: dastyclaw [-h] [--version] {user,domain} ...
+usage: dastyclaw [-h] [--version] {hunt,user,domain} ...
 
 options:
   -h, --help            show this help message and exit
   --version             show program's version number and exit
 
 subcommands:
+  hunt                  Smart multi-vector OSINT investigation (Username, Name, Email, Location)
   user                  Hunt username across 35+ online platforms
   domain                Enumerate subdomains, DNS, SPF/DMARC & security headers
 
-flags:
-  -o, --output-dir DIR  Directory to save reports (default: ./reports)
-  -c, --concurrency N   Concurrent network workers (default: 25)
-  -t, --timeout SEC     Request timeout in seconds (default: 6.0)
-  --no-export           Display results in terminal only without writing to disk
+hunt options:
+  -u, --username STR    Target username/handle (e.g. pajadasty)
+  -n, --name STR        Target full name (e.g. 'Pavel Novák')
+  -e, --email STR       Target email address
+  -l, --location STR    Target city or location
+  -i, --interactive     Launch interactive step-by-step wizard
 ```
 
 ---

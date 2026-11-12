@@ -1,10 +1,10 @@
 # DastyClaw 🦅🕵️‍♂️
 
-**Fast, asynchronous OSINT reconnaissance and digital footprinting toolkit by pajadasty.**
+**Fast, asynchronous tactical OSINT reconnaissance and digital footprinting toolkit by pajadasty.**
 
-Built for security researchers, penetration testers, CTF players, and investigative analysts to rapidly map targets from a single command.
+Built for security researchers, penetration testers, CTF players, and investigative analysts to rapidly map targets across social networks, developer platforms, emails, phone numbers, and domains.
 
-```
+```text
   ____            _        ____ _                 
  |  _ \  __ _ ___| |_ _   / ___| | __ ___      __ 
  | | | |/ _` / __| __| | | |   | |/ _` \ \ /\ / / 
@@ -18,14 +18,19 @@ Built for security researchers, penetration testers, CTF players, and investigat
 
 ## ⚡ Key Capabilities
 
-- **Interactive Target Profiler (`hunt`)**: Step-by-step wizard prompting for username, full name, email, and location to correlate findings into a unified intelligence dossier.
-- **Concurrent Username Hunting**: Asynchronously probes 35+ platforms (GitHub, Reddit, Twitter/X, Keybase, Steam, Telegram, Spotify, HackerNews, SoundCloud, Twitch, etc.) in under 2 seconds.
+- **Interactive Target Profiler (`hunt`)**: Step-by-step wizard prompting for username, full name, email, phone number, and location to correlate findings into a unified intelligence dossier.
+- **Concurrent Username Hunting**: Asynchronously probes 30+ platforms (including precision-crawled **Instagram**, **TikTok**, **Twitch**, **GitHub**, **Spotify**, etc.) in under 2 seconds.
+- **Anti-Bot Bypass for Modern Social SPAs**:
+  - **Instagram**: Employs Googlebot metadata extraction to parse server-side OpenGraph tags without session barriers.
+  - **TikTok**: Parses router rehydration state (`__UNIVERSAL_DATA_FOR_REHYDRATION__`) for verified user presence.
+  - **Twitch**: Queries direct high-performance GraphQL API.
 - **Email Intelligence & Avatar Footprinting**: Validates format, checks MX mail servers via DNS-over-HTTPS (DoH), searches public Gravatar accounts, and correlates GitHub email owners.
+- **Telephony Profiling**: Validates international E.164 formats, detects country prefixes, and generates instant WhatsApp/Telegram communication links.
 - **Tactical OSINT Dork Generation**: Automatically formats tailored Google and DuckDuckGo search queries for social profiles, CV/resumes, pastebin leaks, and exposed git credentials.
 - **Certificate Transparency Subdomain Discovery**: Passively discovers subdomains and shadow infrastructure via `crt.sh` logs without sending invasive packets to target systems.
 - **DNS & Anti-Spoofing Mail Security Audit**: Queries DNS records over HTTPS (Cloudflare 1.1.1.1 DoH) and audits SPF (`v=spf1`) and DMARC (`_dmarc`) configuration to determine whether a domain is vulnerable to email spoofing.
 - **HTTP Security Headers Audit**: Assesses web server hardening (HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) and calculates a letter grade (A+ through F) with remediation advice.
-- **Automated Dossier Generation**: Exports investigation findings to structured **Markdown dossiers** and machine-readable **JSON reports**.
+- **Multi-Format Dossier Export**: Automatically exports to **Markdown dossiers**, **machine-readable JSON**, and **interactive dark-mode HTML dashboards** (with `--open` auto-launch).
 
 ---
 
@@ -55,43 +60,55 @@ The smartest way to profile a target. Prompts you step-by-step for known attribu
 dastyclaw hunt
 ```
 
-Or pass flags directly:
+Or pass flags directly and automatically open the HTML dossier in your web browser:
 
 ```bash
-dastyclaw hunt -u pajadasty -n "Pavel" -e "pajadasty@gmail.com" -l "Prague"
+dastyclaw hunt -u pajadasty -n "Pavel" -e "pajadasty@gmail.com" -p "+420123456789" -l "Prague" --open
 ```
 
 Output:
 
 ```text
 [*] Tactical Target Profiler (Interactive OSINT Wizard)
-Zadejte známé údaje o cíli (nechte prázdné pro přeskočení):
+Enter known intelligence attributes (press Enter to skip):
 
-[?] Přezdívka / Nickname (např. pajadasty): pajadasty
-[?] Jméno a příjmení osoby (např. Pavel Novák): Pavel
-[?] Emailová adresa (např. target@example.com): pajadasty@gmail.com
-[?] Město / Lokalita (např. Praha / Czechia): Praha
+[?] Target handle / username (e.g. pajadasty): pajadasty
+[?] Full Name (e.g. 'Pavel Novak'): Pavel
+[?] Email address (e.g. target@example.com): pajadasty@gmail.com
+[?] Location / City (e.g. 'Prague, Czechia'): Prague
+[?] Phone number (e.g. '+420123456789'): +420123456789
 
-[1/3] Skenování digitální stopy pro přezdívku: @pajadasty
-  [+] PROFIL GitHub         https://github.com/pajadasty (246ms)
-  [+] PROFIL Spotify        https://open.spotify.com/user/pajadasty (206ms)
-  [+] PROFIL Twitch         https://www.twitch.tv/pajadasty (744ms)
-  ...
-  Nalezeno: 10 aktivních profilů.
+[1/4] Hunting digital footprint for alias: @pajadasty
+  [+] FOUND SoundCloud     https://soundcloud.com/pajadasty (260ms)
+  [+] FOUND Spotify        https://open.spotify.com/user/pajadasty (291ms)
+  [+] FOUND Twitch         https://www.twitch.tv/pajadasty (322ms)
+  [+] FOUND GitLab         https://gitlab.com/pajadasty (438ms)
+  [+] FOUND GitHub         https://github.com/pajadasty (520ms)
+  [+] FOUND Replit         https://replit.com/@pajadasty (715ms)
+  [+] FOUND TikTok         https://www.tiktok.com/@pajadasty (724ms)
+  [+] FOUND Pinterest      https://www.pinterest.com/pajadasty/ (833ms)
+  [+] FOUND Instagram      https://www.instagram.com/pajadasty/ (905ms)
+  Discovery complete: 9 active profiles found.
 
-[2/3] Prověřování emailové adresy: pajadasty@gmail.com
-  [+] Doména: gmail.com (MX: VALIDNÍ (PŘIJÍMÁ POŠTU))
+[2/4] Auditing email footprint: pajadasty@gmail.com
+  [+] Domain: gmail.com (MX: VALID (ACCEPTS MAIL))
 
-[3/3] Generování taktických vyhledávacích dotazů (OSINT Dorks)...
+[3/4] Profiling phone number: +420123456789
+  [+] Region: Czech Republic (+420) (+420123456789)
+  [+] WhatsApp Link: https://wa.me/420123456789
+  [+] Telegram Link: https://t.me/+420123456789
+
+[*] Generating tactical search dorks...
   • Social & Professional: Locate social media and LinkedIn profiles matching real name
-    Google: https://www.google.com/search?q=site%3Alinkedin.com%2Fin...
-  • Documents & CV: Search for published resumes, resumes, presentations or documents
-  • Pastes & Dumps: Search for mentions in public paste and text storage sites
-  • Code & Git Repos: Search for commits, config files, and issues containing the email
+  • Documents & Resumes: Discover publicly exposed resumes, presentations, and documents
+  • Pastes & Dumps: Search for credentials, dump files, and mentions on paste sites
+  • Code & Git Repos: Search for commits, exposed configs, and issue comments
+  • Phone Footprint: Search for directory registrations, reverse phone listings, and contacts
 
-[*] Kompletní vyšetřovací spis vygenerován:
-  MD Report:   reports\pajadasty_investigation_dossier.md
-  JSON Data:   reports\pajadasty_investigation_dossier.json
+[*] Intelligence Dossier Generated:
+  Markdown Report -> reports\pajadasty_investigation_dossier.md
+  JSON Data       -> reports\pajadasty_investigation_dossier.json
+  Interactive HTML -> reports\pajadasty_investigation_dossier.html
 ```
 
 ---
@@ -101,7 +118,7 @@ Zadejte známé údaje o cíli (nechte prázdné pro přeskočení):
 Scan for digital footprints and active accounts across social networks, developer hubs, and streaming platforms:
 
 ```bash
-dastyclaw user pajadasty
+dastyclaw user pajadasty --open
 ```
 
 ---
@@ -160,16 +177,18 @@ options:
   --version             show program's version number and exit
 
 subcommands:
-  hunt                  Smart multi-vector OSINT investigation (Username, Name, Email, Location)
-  user                  Hunt username across 35+ online platforms
+  hunt                  Smart multi-vector OSINT investigation (Username, Name, Email, Phone, Location)
+  user                  Hunt username across 30+ online platforms
   domain                Enumerate subdomains, DNS, SPF/DMARC & security headers
 
 hunt options:
-  -u, --username STR    Target username/handle (e.g. pajadasty)
-  -n, --name STR        Target full name (e.g. 'Pavel Novák')
+  -u, --username STR    Target username or handle (e.g. pajadasty)
+  -n, --name STR        Target full name (e.g. 'Pavel Novak')
   -e, --email STR       Target email address
+  -p, --phone STR       Target phone number (e.g. '+420...')
   -l, --location STR    Target city or location
   -i, --interactive     Launch interactive step-by-step wizard
+  -b, --open            Automatically open generated HTML dossier in default browser
 ```
 
 ---

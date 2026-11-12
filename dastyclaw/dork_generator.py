@@ -33,6 +33,7 @@ class DorkGenerator:
         real_name: Optional[str] = None,
         email: Optional[str] = None,
         location: Optional[str] = None,
+        phone: Optional[str] = None,
     ) -> List[OsintDork]:
         dorks: List[OsintDork] = []
 
@@ -52,19 +53,19 @@ class DorkGenerator:
             q = f'site:reddit.com | site:medium.com | site:dev.to | site:t.me "{username}"'
             dorks.append(OsintDork(
                 category="Username Footprint",
-                description="Find forums, tech blogs, and channel mentions of the handle",
+                description="Find forum posts, developer articles, and community mentions",
                 query=q,
                 google_url=cls._build_url(q, "google"),
                 duckduckgo_url=cls._build_url(q, "duckduckgo"),
             ))
 
-        # 2. Public Documents & CVs
+        # 2. Public Documents & Resumes
         target_term = real_name or username
         if target_term:
-            q = f'"{target_term}" filetype:pdf | filetype:docx (cv OR resume OR zivotopis OR "curriculum vitae")'
+            q = f'"{target_term}" filetype:pdf | filetype:docx (cv OR resume OR "curriculum vitae")'
             dorks.append(OsintDork(
-                category="Documents & CV",
-                description="Search for published resumes, resumes, presentations or documents",
+                category="Documents & Resumes",
+                description="Discover publicly exposed resumes, presentations, and documents",
                 query=q,
                 google_url=cls._build_url(q, "google"),
                 duckduckgo_url=cls._build_url(q, "duckduckgo"),
@@ -81,18 +82,30 @@ class DorkGenerator:
             q = f'site:pastebin.com | site:ghostbin.co | site:throwbin.io | site:rentry.co ({terms_q})'
             dorks.append(OsintDork(
                 category="Pastes & Dumps",
-                description="Search for mentions in public paste and text storage sites",
+                description="Search for credentials, dump files, and mentions on paste sites",
                 query=q,
                 google_url=cls._build_url(q, "google"),
                 duckduckgo_url=cls._build_url(q, "duckduckgo"),
             ))
 
-        # 4. Code & Configuration Leaks
+        # 4. Code & Git Repositories
         if email:
             q = f'site:github.com | site:gitlab.com | site:bitbucket.org "{email}"'
             dorks.append(OsintDork(
                 category="Code & Git Repos",
-                description="Search for commits, config files, and issues containing the email",
+                description="Search for commits, exposed configs, and issue comments",
+                query=q,
+                google_url=cls._build_url(q, "google"),
+                duckduckgo_url=cls._build_url(q, "duckduckgo"),
+            ))
+
+        # 5. Phone Number Intelligence
+        if phone:
+            clean_digits = "".join(c for c in phone if c.isdigit())
+            q = f'"{phone}" | "{clean_digits}" site:sync.me | site:truecaller.com | site:facebook.com'
+            dorks.append(OsintDork(
+                category="Phone Footprint",
+                description="Search for directory registrations, reverse phone listings, and contacts",
                 query=q,
                 google_url=cls._build_url(q, "google"),
                 duckduckgo_url=cls._build_url(q, "duckduckgo"),

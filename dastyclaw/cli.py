@@ -3,14 +3,16 @@ from __future__ import annotations
 import argparse
 import asyncio
 import sys
+import webbrowser
 from pathlib import Path
 from typing import Dict, List, Optional
 
 from dastyclaw import __version__
 from dastyclaw.domain_recon import DomainRecon
-from dastyclaw.dork_generator import DorkGenerator, OsintDork
+from dastyclaw.dork_generator import DorkGenerator
 from dastyclaw.email_hunter import EmailFootprintResult, EmailHunter
 from dastyclaw.headers_audit import SecurityHeadersAuditor
+from dastyclaw.phone_hunter import PhoneHunter, PhoneIntelResult
 from dastyclaw.reporter import ReconReporter
 from dastyclaw.user_hunter import HunterResult, UserHunter
 
@@ -50,7 +52,7 @@ def prompt_str(label: str, default: str = "") -> str:
         return default
 
 
-async def cmd_user(username: str, concurrency: int, timeout: float, output_dir: Path | None) -> None:
+async def cmd_user(username: str, concurrency: int, timeout: float, output_dir: Path | None, open_browser: bool = False) -> None:
     print(f"{BOLD}[*] Initiating Username Hunter for target:{RESET} {CYAN}@{username}{RESET}")
     hunter = UserHunter(concurrency=concurrency, timeout_sec=timeout)
 
@@ -69,13 +71,21 @@ async def cmd_user(username: str, concurrency: int, timeout: float, output_dir: 
         reporter = ReconReporter(f"user_{username}")
         md_file = output_dir / f"{username}_user_dossier.md"
         json_file = output_dir / f"{username}_user_dossier.json"
+        html_file = output_dir / f"{username}_user_dossier.html"
+
         reporter.export_markdown(md_file, hunter_results=results)
         reporter.export_json(json_file, hunter_results=results)
-        print(f"  {GRAY}Report saved -> {md_file}{RESET}")
-        print(f"  {GRAY}JSON data saved -> {json_file}{RESET}\n")
+        reporter.export_html(html_file, hunter_results=results)
+
+        print(f"  {GRAY}Markdown Report -> {md_file}{RESET}")
+        print(f"  {GRAY}JSON Data       -> {json_file}{RESET}")
+        print(f"  {GREEN}HTML Dossier    -> {html_file}{RESET}\n")
+
+        if open_browser:
+            webbrowser.open(html_file.resolve().as_uri())
 
 
-async def cmd_domain(domain: str, timeout: float, output_dir: Path | None) -> None:
+async def cmd_domain(domain: str, timeout: float, output_dir: Path | None, open_browser: bool = False) -> None:
     print(f"{BOLD}[*] Initiating Domain Reconnaissance for:{RESET} {CYAN}{domain}{RESET}")
     recon = DomainRecon(timeout_sec=timeout)
     auditor = SecurityHeadersAuditor(timeout_sec=timeout)
@@ -123,8 +133,8 @@ async def cmd_domain(domain: str, timeout: float, output_dir: Path | None) -> No
         json_file = output_dir / f"{report.domain}_domain_dossier.json"
         reporter.export_markdown(md_file, domain_report=report, headers_report=headers_report)
         reporter.export_json(json_file, domain_report=report, headers_report=headers_report)
-        print(f"  {GRAY}Report saved -> {md_file}{RESET}")
-        print(f"  {GRAY}JSON data saved -> {json_file}{RESET}\n")
+        print(f"  {GRAY}Markdown Report -> {md_file}{RESET}")
+        print(f"  {GRAY}JSON Data       -> {json_file}{RESET}\n")
 
 
 async def cmd_hunt(
@@ -132,27 +142,30 @@ async def cmd_hunt(
     real_name: Optional[str],
     email: Optional[str],
     location: Optional[str],
+    phone: Optional[str],
     concurrency: int,
     timeout: float,
     output_dir: Path | None,
     interactive: bool = False,
+    open_browser: bool = False,
 ) -> None:
-    # If interactive mode requested or all inputs empty, ask the user interactively
-    if interactive or (not username and not real_name and not email):
+    # Interactive wizard if requested or all empty
+    if interactive or (not username and not real_name and not email and not phone):
         print(f"{BOLD}[*] Tactical Target Profiler (Interactive OSINT Wizard){RESET}")
-        print(f"{GRAY}Zadejte známé údaje o cíli (nechte prázdné pro přeskočení):{RESET}\n")
+        print(f"{GRAY}Enter known intelligence attributes (press Enter to skip):{RESET}\n")
 
-        username = prompt_str("Přezdívka / Nickname (např. pajadasty)", username or "")
-        real_name = prompt_str("Jméno a příjmení osoby (např. Pavel Novák)", real_name or "")
-        email = prompt_str("Emailová adresa (např. target@example.com)", email or "")
-        location = prompt_str("Město / Lokalita (např. Praha / Czechia)", location or "")
+        username = prompt_str("Target handle / username (e.g. pajadasty)", username or "")
+        real_name = prompt_str("Full Name (e.g. 'Pavel Novak')", real_name or "")
+        email = prompt_str("Email address (e.g. target@example.com)", email or "")
+        location = prompt_str("Location / City (e.g. 'Prague, Czechia')", location or "")
+        phone = prompt_str("Phone number (e.g. '+420123456789')", phone or "")
         print()
 
-    if not username and not real_name and not email:
-        print(f"{RED}[!] Nebyly zadány žádné identifikační údaje k vyšetřování.{RESET}")
+    if not username and not real_name and not email and not phone:
+        print(f"{RED}[!] No target intelligence attributes provided.{RESET}")
         return
 
-    primary_target = username or real_name or email or "target"
+    primary_target = username or real_name or email or phone or "target"
     safe_target_name = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in primary_target)
 
     person_profile: Dict[str, str] = {}
@@ -164,13 +177,16 @@ async def cmd_hunt(
         person_profile["email"] = email
     if location:
         person_profile["location"] = location
+    if phone:
+        person_profile["phone"] = phone
 
     hunter_results: Optional[List[HunterResult]] = None
     email_result: Optional[EmailFootprintResult] = None
+    phone_result: Optional[PhoneIntelResult] = None
 
     # 1. Username Hunter
     if username:
-        print(f"{BOLD}[1/3] Skenování digitální stopy pro přezdívku:{RESET} {CYAN}@{username}{RESET}")
+        print(f"{BOLD}[1/4] Hunting digital footprint for alias:{RESET} {CYAN}@{username}{RESET}")
         hunter = UserHunter(concurrency=concurrency, timeout_sec=timeout)
 
         found_count = 0
@@ -179,37 +195,51 @@ async def cmd_hunt(
             nonlocal found_count
             if r.found:
                 found_count += 1
-                print(f"  {GREEN}[+] PROFIL{RESET} {BOLD}{r.platform:<14}{RESET} {r.url} {GRAY}({r.elapsed_ms}ms){RESET}")
+                print(f"  {GREEN}[+] FOUND{RESET} {BOLD}{r.platform:<14}{RESET} {r.url} {GRAY}({r.elapsed_ms}ms){RESET}")
 
         hunter_results = await hunter.hunt(username, on_result=on_result)
-        print(f"  {BOLD}Nalezeno:{RESET} {GREEN}{found_count}{RESET} aktivních profilů.\n")
+        print(f"  {BOLD}Discovery complete:{RESET} {GREEN}{found_count}{RESET} active profiles found.\n")
 
     # 2. Email Intelligence
     if email:
-        print(f"{BOLD}[2/3] Prověřování emailové adresy:{RESET} {CYAN}{email}{RESET}")
+        print(f"{BOLD}[2/4] Auditing email footprint:{RESET} {CYAN}{email}{RESET}")
         email_hunter = EmailHunter(timeout_sec=timeout)
         email_result = await email_hunter.hunt(email)
 
         if email_result.is_valid_format:
-            mx_icon = f"{GREEN}VALIDNÍ (PŘIJÍMÁ POŠTU){RESET}" if email_result.mx_valid else f"{YELLOW}NEPOTVRZENO{RESET}"
-            print(f"  [+] Doména: {email_result.domain} (MX: {mx_icon})")
+            mx_icon = f"{GREEN}VALID (ACCEPTS MAIL){RESET}" if email_result.mx_valid else f"{YELLOW}NO MX DETECTED{RESET}"
+            print(f"  [+] Domain: {email_result.domain} (MX: {mx_icon})")
             if email_result.gravatar_found:
-                print(f"  {GREEN}[+] Gravatar profil nalezen:{RESET} {email_result.gravatar_profile_url}")
+                print(f"  {GREEN}[+] Gravatar Profile Detected:{RESET} {email_result.gravatar_profile_url}")
                 if email_result.gravatar_display_name:
-                    print(f"      Zobrazované jméno: {BOLD}{email_result.gravatar_display_name}{RESET}")
+                    print(f"      Display Name: {BOLD}{email_result.gravatar_display_name}{RESET}")
             if email_result.github_user:
-                print(f"  {GREEN}[+] Nalezen GitHub účet k emailu:{RESET} https://github.com/{email_result.github_user}")
+                print(f"  {GREEN}[+] Matching GitHub Account:{RESET} https://github.com/{email_result.github_user}")
         else:
-            print(f"  {RED}[!] Neplatný formát emailu.{RESET}")
+            print(f"  {RED}[!] Invalid email syntax.{RESET}")
         print()
 
-    # 3. Tactical OSINT Dorks
-    print(f"{BOLD}[3/3] Generování taktických vyhledávacích dotazů (OSINT Dorks)...{RESET}")
+    # 3. Telephony Intelligence
+    if phone:
+        print(f"{BOLD}[3/4] Profiling phone number:{RESET} {CYAN}{phone}{RESET}")
+        phone_result = PhoneHunter.analyze(phone)
+        if phone_result.is_valid_format:
+            print(f"  [+] Region: {GREEN}{phone_result.country_hint}{RESET} ({phone_result.cleaned_number})")
+            print(f"  [+] WhatsApp Link: {phone_result.whatsapp_link}")
+            print(f"  [+] Telegram Link: {phone_result.telegram_link}")
+        else:
+            print(f"  {RED}[!] Invalid telephone structure.{RESET}")
+        print()
+
+    # 4. Tactical OSINT Dorks
+    step_label = "[4/4]" if (phone and email and username) else "[*]"
+    print(f"{BOLD}{step_label} Generating tactical search dorks...{RESET}")
     dorks = DorkGenerator.generate(
         username=username,
         real_name=real_name,
         email=email,
         location=location,
+        phone=phone,
     )
     for d in dorks:
         print(f"  {MAGENTA}• {d.category}:{RESET} {d.description}")
@@ -221,10 +251,13 @@ async def cmd_hunt(
         reporter = ReconReporter(f"investigation_{safe_target_name}")
         md_file = output_dir / f"{safe_target_name}_investigation_dossier.md"
         json_file = output_dir / f"{safe_target_name}_investigation_dossier.json"
+        html_file = output_dir / f"{safe_target_name}_investigation_dossier.html"
+
         reporter.export_markdown(
             md_file,
             hunter_results=hunter_results,
             email_report=email_result,
+            phone_report=phone_result,
             dorks=dorks,
             person_profile=person_profile,
         )
@@ -232,12 +265,26 @@ async def cmd_hunt(
             json_file,
             hunter_results=hunter_results,
             email_report=email_result,
+            phone_report=phone_result,
             dorks=dorks,
             person_profile=person_profile,
         )
-        print(f"{BOLD}[*] Kompletní vyšetřovací spis vygenerován:{RESET}")
-        print(f"  {GREEN}MD Report:{RESET}   {md_file}")
-        print(f"  {GREEN}JSON Data:{RESET}   {json_file}\n")
+        reporter.export_html(
+            html_file,
+            hunter_results=hunter_results,
+            email_report=email_result,
+            phone_report=phone_result,
+            dorks=dorks,
+            person_profile=person_profile,
+        )
+
+        print(f"{BOLD}[*] Intelligence Dossier Generated:{RESET}")
+        print(f"  {GRAY}Markdown Report -> {md_file}{RESET}")
+        print(f"  {GRAY}JSON Data       -> {json_file}{RESET}")
+        print(f"  {GREEN}Interactive HTML -> {html_file}{RESET}\n")
+
+        if open_browser:
+            webbrowser.open(html_file.resolve().as_uri())
 
 
 async def async_main() -> None:
@@ -250,16 +297,19 @@ async def async_main() -> None:
     subparsers = parser.add_subparsers(dest="subcommand", help="Module to execute")
 
     # Command: hunt (Smart Multi-Vector Person Profiler)
-    hunt_p = subparsers.add_parser("hunt", help="Smart multi-vector OSINT investigation (Username, Name, Email, Location)")
-    hunt_p.add_argument("-u", "--username", help="Target username/handle (e.g. pajadasty)")
-    hunt_p.add_argument("-n", "--name", help="Target full name (e.g. 'Pavel Novák')")
+    hunt_p = subparsers.add_parser("hunt", help="Smart multi-vector OSINT investigation (Username, Name, Email, Phone, Location)")
+    hunt_p.add_argument("-u", "--username", help="Target username or handle (e.g. pajadasty)")
+    hunt_p.add_argument("-n", "--name", help="Target full name (e.g. 'Pavel Novak')")
     hunt_p.add_argument("-e", "--email", help="Target email address")
+    hunt_p.add_argument("-p", "--phone", help="Target telephone number (e.g. +420...)")
     hunt_p.add_argument("-l", "--location", help="Target city or location")
     hunt_p.add_argument("-i", "--interactive", action="store_true", help="Launch interactive step-by-step wizard")
+    hunt_p.add_argument("-b", "--open", action="store_true", help="Automatically open generated HTML dossier in default web browser")
 
     # Command: user
-    user_p = subparsers.add_parser("user", help="Hunt username across 35+ online platforms")
+    user_p = subparsers.add_parser("user", help="Hunt username across 30+ online platforms")
     user_p.add_argument("username", nargs="?", default="", help="Target username or handle to investigate")
+    user_p.add_argument("-b", "--open", action="store_true", help="Automatically open generated HTML dossier in default web browser")
 
     # Command: domain
     domain_p = subparsers.add_parser("domain", help="Enumerate subdomains, DNS, SPF/DMARC & security headers")
@@ -277,9 +327,9 @@ async def async_main() -> None:
     print_banner()
 
     if not args.subcommand:
-        # Default to interactive hunt if called with no arguments
+        # Default to interactive hunt wizard if called with no arguments
         out_dir = Path("./reports")
-        await cmd_hunt(None, None, None, None, 25, 6.0, out_dir, interactive=True)
+        await cmd_hunt(None, None, None, None, None, 25, 6.0, out_dir, interactive=True)
         return
 
     out_dir = None if args.no_export else Path(args.output_dir)
@@ -290,20 +340,22 @@ async def async_main() -> None:
             real_name=args.name,
             email=args.email,
             location=args.location,
+            phone=args.phone,
             concurrency=args.concurrency,
             timeout=args.timeout,
             output_dir=out_dir,
             interactive=args.interactive,
+            open_browser=args.open,
         )
     elif args.subcommand == "user":
         if not args.username:
-            username = prompt_str("Zadejte přezdívku k vyhledání")
+            username = prompt_str("Enter handle / username to investigate")
             if not username:
-                print(f"{RED}[!] Nebyla zadána přezdívka.{RESET}")
+                print(f"{RED}[!] No username provided.{RESET}")
                 return
         else:
             username = args.username
-        await cmd_user(username, args.concurrency, args.timeout, out_dir)
+        await cmd_user(username, args.concurrency, args.timeout, out_dir, open_browser=args.open)
     elif args.subcommand == "domain":
         await cmd_domain(args.domain, args.timeout, out_dir)
 

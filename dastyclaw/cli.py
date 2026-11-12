@@ -5,11 +5,11 @@ import asyncio
 import sys
 from pathlib import Path
 
-from reconclaw import __version__
-from reconclaw.domain_recon import DomainRecon
-from reconclaw.headers_audit import SecurityHeadersAuditor
-from reconclaw.reporter import ReconReporter
-from reconclaw.user_hunter import HunterResult, UserHunter
+from dastyclaw import __version__
+from dastyclaw.domain_recon import DomainRecon
+from dastyclaw.headers_audit import SecurityHeadersAuditor
+from dastyclaw.reporter import ReconReporter
+from dastyclaw.user_hunter import HunterResult, UserHunter
 
 # ANSI Terminal Colors
 BOLD = "\033[1m"
@@ -24,12 +24,13 @@ MAGENTA = "\033[35m"
 
 def print_banner() -> None:
     banner = f"""{BOLD}{CYAN}
-  ____                      ____ _                 
- |  _ \\ ___  ___ ___  _ __ / ___| | __ ___      __ 
- | |_) / _ \\/ __/ _ \\| '_ \\ |   | |/ _` \\ \\ /\\ / / 
- |  _ <  __/ (_| (_) | | | | |___| | (_| |\\ V  V /  
- |_| \\_\\___|\\___\\___/|_| |_|\\____|_|\\__,_| \\_/\\_/   {RESET}{GRAY}v{__version__}{RESET}
- {GRAY}Tactical OSINT Reconnaissance & Footprinting Toolkit{RESET}
+  ____            _        ____ _                 
+ |  _ \\  __ _ ___| |_ _   / ___| | __ ___      __ 
+ | | | |/ _` / __| __| | | |   | |/ _` \\ \\ /\\ / / 
+ | |_| | (_| \\__ \\ |_| |_| |___| | (_| |\\ V  V /  
+ |____/ \\__,_|___/\\__|\\__, |\\____|_|\\__,_| \\_/\\_/   {RESET}{GRAY}v{__version__}{RESET}
+                      {CYAN}|___/{RESET}
+ {GRAY}Tactical OSINT Reconnaissance & Footprinting Toolkit by pajadasty{RESET}
 """
     print(banner)
 
@@ -113,8 +114,8 @@ async def cmd_domain(domain: str, timeout: float, output_dir: Path | None) -> No
 
 async def async_main() -> None:
     parser = argparse.ArgumentParser(
-        prog="reconclaw",
-        description="Tactical OSINT Reconnaissance & Digital Footprinting Toolkit.",
+        prog="dastyclaw",
+        description="Tactical OSINT Reconnaissance & Digital Footprinting Toolkit by pajadasty.",
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
 

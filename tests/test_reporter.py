@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
-from reconclaw.reporter import ReconReporter
-from reconclaw.user_hunter import HunterResult
-from reconclaw.domain_recon import DomainReconReport, MailSecurityAudit
+from dastyclaw.reporter import ReconReporter
+from dastyclaw.user_hunter import HunterResult
+from dastyclaw.domain_recon import DomainReconReport, MailSecurityAudit
 
 
 def test_reporter_export(tmp_path: Path):

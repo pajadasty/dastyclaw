@@ -1,4 +1,4 @@
-from reconclaw.targets import PLATFORMS, PlatformTarget
+from dastyclaw.targets import PLATFORMS, PlatformTarget
 
 
 def test_platforms_integrity():

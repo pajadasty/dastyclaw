@@ -60,7 +60,7 @@ class DomainRecon:
         subdomains: Set[str] = set()
 
         try:
-            resp = await client.get(url, headers={"User-Agent": "ReconClaw/1.0"})
+            resp = await client.get(url, headers={"User-Agent": "DastyClaw/1.0"})
             if resp.status_code == 200:
                 entries = resp.json()
                 for entry in entries:

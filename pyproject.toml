@@ -3,14 +3,14 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "reconclaw"
+name = "dastyclaw"
 version = "0.1.0"
-description = "Fast, asynchronous OSINT reconnaissance and digital footprinting toolkit."
+description = "Fast, asynchronous OSINT reconnaissance and digital footprinting toolkit by pajadasty."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
-authors = [{ name = "ReconClaw Contributors" }]
-keywords = ["osint", "security", "reconnaissance", "subdomain-enumeration", "footprinting", "cybersecurity", "sherlock", "dns"]
+authors = [{ name = "pajadasty" }]
+keywords = ["osint", "security", "reconnaissance", "subdomain-enumeration", "footprinting", "cybersecurity", "sherlock", "dns", "dastyclaw"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Information Technology",
@@ -32,8 +32,8 @@ dev = [
 ]
 
 [project.scripts]
-reconclaw = "reconclaw.cli:main"
+dastyclaw = "dastyclaw.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["reconclaw*"]
+include = ["dastyclaw*"]

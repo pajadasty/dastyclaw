@@ -1,28 +1,40 @@
-# ReconClaw
+# DastyClaw 🦅🕵️‍♂️
 
-A fast, asynchronous OSINT reconnaissance and digital footprinting toolkit built for security researchers, penetration testers, and investigative analysts.
+**Fast, asynchronous OSINT reconnaissance and digital footprinting toolkit by pajadasty.**
+
+Built for security researchers, penetration testers, CTF players, and investigative analysts to rapidly map targets from a single command.
+
+```
+  ____            _        ____ _                 
+ |  _ \  __ _ ___| |_ _   / ___| | __ ___      __ 
+ | | | |/ _` / __| __| | | |   | |/ _` \ \ /\ / / 
+ | |_| | (_| \__ \ |_| |_| |___| | (_| |\ V  V /  
+ |____/ \__,_|___/\__|\__, |\____|_|\__,_| \_/\_/   v0.1.0
+                      |___/                       
+ Tactical OSINT Reconnaissance & Footprinting Toolkit by pajadasty
+```
 
 ---
 
-## Capabilities
+## ⚡ Key Capabilities
 
-- **Concurrent Username Hunting**: Asynchronously probes 35+ major platforms (GitHub, Reddit, Twitter/X, Keybase, Steam, Telegram, Spotify, HackerNews, etc.) in parallel within seconds using bounded asyncio concurrency.
-- **Certificate Transparency Subdomain Discovery**: Enumerates public subdomains and shadow infrastructure via `crt.sh` logs without sending invasive packets to target systems.
-- **DNS & Anti-Spoofing Mail Security Audit**: Queries DNS records over HTTPS (DoH) and analyzes SPF (`v=spf1`) and DMARC (`_dmarc`) configuration to determine whether a domain is vulnerable to email spoofing.
+- **Concurrent Username Hunting**: Asynchronously probes 35+ platforms (GitHub, Reddit, Twitter/X, Keybase, Steam, Telegram, Spotify, HackerNews, SoundCloud, Twitch, etc.) in under 2 seconds.
+- **Certificate Transparency Subdomain Discovery**: Passively discovers subdomains and shadow infrastructure via `crt.sh` logs without sending invasive packets to target systems.
+- **DNS & Anti-Spoofing Mail Security Audit**: Queries DNS records over HTTPS (Cloudflare 1.1.1.1 DoH) and audits SPF (`v=spf1`) and DMARC (`_dmarc`) configuration to determine whether a domain is vulnerable to email spoofing.
 - **HTTP Security Headers Audit**: Assesses web server hardening (HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) and calculates a letter grade (A+ through F) with remediation advice.
 - **Automated Dossier Generation**: Exports investigation findings to structured **Markdown dossiers** and machine-readable **JSON reports**.
 
 ---
 
-## Installation
+## 🚀 Installation
 
 ```bash
-git clone https://github.com/<your-username>/reconclaw.git
-cd reconclaw
+git clone https://github.com/pajadasty/dastyclaw.git
+cd dastyclaw
 pip install .
 ```
 
-For development and running tests:
+For development and testing:
 
 ```bash
 pip install -e ".[dev]"
@@ -30,33 +42,32 @@ pip install -e ".[dev]"
 
 ---
 
-## Usage
+## 💻 Usage
 
 ### 1. Hunt a Username Across Online Platforms
 
-Scan for digital footprints and active accounts across social networks, developer hubs, and creator platforms:
+Scan for digital footprints and active accounts across social networks, developer hubs, and streaming platforms:
 
 ```bash
-reconclaw user <target_username>
-```
-
-Example:
-
-```bash
-reconclaw user torvalds
+dastyclaw user pajadasty
 ```
 
 Output:
 
 ```text
-[*] Initiating Username Hunter for target: @torvalds
-  [+] FOUND  GitHub         https://github.com/torvalds (547ms)
-  [+] FOUND  GitLab         https://gitlab.com/torvalds (971ms)
-  [+] FOUND  DockerHub      https://hub.docker.com/v2/users/torvalds/ (827ms)
-  [+] FOUND  Keybase        https://keybase.io/torvalds (3001ms)
-  [+] FOUND  HackerNews     https://news.ycombinator.com/user?id=torvalds (3082ms)
-  ...
-[*] Hunter complete: 19 active profiles found across 36 platforms.
+[*] Initiating Username Hunter for target: @pajadasty
+  [+] FOUND  GitHub         https://github.com/pajadasty (489ms)
+  [+] FOUND  GitLab         https://gitlab.com/pajadasty (478ms)
+  [+] FOUND  PyPI           https://pypi.org/user/pajadasty/ (282ms)
+  [+] FOUND  Spotify        https://open.spotify.com/user/pajadasty (256ms)
+  [+] FOUND  SoundCloud     https://soundcloud.com/pajadasty (305ms)
+  [+] FOUND  Twitch         https://www.twitch.tv/pajadasty (943ms)
+  [+] FOUND  Hashnode       https://hashnode.com/@pajadasty (204ms)
+  [+] FOUND  Medium         https://medium.com/@pajadasty (499ms)
+  [+] FOUND  Pinterest      https://www.pinterest.com/pajadasty/ (670ms)
+  [+] FOUND  Replit         https://replit.com/@pajadasty (709ms)
+
+[*] Hunter complete: 10 active profiles found across 36 platforms.
 ```
 
 Reports are automatically saved to `./reports/<username>_user_dossier.md` and `.json`.
@@ -68,13 +79,13 @@ Reports are automatically saved to `./reports/<username>_user_dossier.md` and `.
 Enumerate subdomains via Certificate Transparency, resolve DNS, and evaluate mail spoofability:
 
 ```bash
-reconclaw domain <target_domain>
+dastyclaw domain target.com
 ```
 
 Example:
 
 ```bash
-reconclaw domain github.com
+dastyclaw domain github.com
 ```
 
 Output:
@@ -107,10 +118,10 @@ Output:
 
 ---
 
-## CLI Options
+## 🛠 CLI Options
 
 ```text
-usage: reconclaw [-h] [--version] {user,domain} ...
+usage: dastyclaw [-h] [--version] {user,domain} ...
 
 options:
   -h, --help            show this help message and exit
@@ -129,22 +140,22 @@ flags:
 
 ---
 
-## Running Tests
+## 🧪 Running Tests
 
-All core modules are verified by unit tests:
+All core modules are verified by pytest:
 
 ```bash
-python -m pytest -v
+pytest -v
 ```
 
 ---
 
-## Legal & Ethical Disclaimer
+## ⚖ Legal & Ethical Disclaimer
 
-`ReconClaw` is intended exclusively for educational purposes, authorized security assessments, and digital investigation of public open-source intelligence (OSINT). Only gather data from authorized targets and public records.
+`DastyClaw` is intended exclusively for educational purposes, authorized security assessments, and digital investigation of public open-source intelligence (OSINT). Only gather data from authorized targets and public records.
 
 ---
 
-## License
+## 📄 License
 
-MIT License
+MIT License - Developed by **pajadasty**.

@@ -1,4 +1,4 @@
-from reconclaw.domain_recon import DomainRecon
+from dastyclaw.domain_recon import DomainRecon
 
 
 def test_mail_security_audit_secure():

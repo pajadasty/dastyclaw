@@ -33,7 +33,7 @@ class SecurityHeadersAuditor:
         url = target if target.startswith(("http://", "https://")) else f"https://{target}"
 
         async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True, verify=False) as client:
-            resp = await client.get(url, headers={"User-Agent": "ReconClaw/1.0"})
+            resp = await client.get(url, headers={"User-Agent": "DastyClaw/1.0"})
             headers = {k.lower(): v for k, v in resp.headers.items()}
 
         checks: List[HeaderCheckResult] = []
